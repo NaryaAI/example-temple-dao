@@ -22,6 +22,6 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.7.3",
-    "@pwnednomore/contracts": "^0.2.0"
+    "@pwnednomore/contracts": "^0.2.8"
   }
 }
