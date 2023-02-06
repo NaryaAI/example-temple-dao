@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity >=0.8.0 <0.9.0;
 
-import {FundLossRecipe} from "pnm-contracts/recipes/FundLossRecipe.sol";
+import {FundLossRecipe} from "@pwnednomore/contracts/recipes/FundLossRecipe.sol";
 
 contract FundLossTest is FundLossRecipe {
     // MyContract myContract;
