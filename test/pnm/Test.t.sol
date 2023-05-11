@@ -35,7 +35,7 @@ contract StaxLPStakingTest is PTest {
         vm.stopPrank();
     }
 
-    function invariant() public {
+    function invariantSafeUserAsset() public {
         vm.prank(user);
         lpStaking.withdrawAll(false);
         assert(lp.balanceOf(user) >= AMOUNT);
